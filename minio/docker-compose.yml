@@ -1,0 +1,30 @@
+version: "3.6"
+services:
+  
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - minio
+    restart: always
+    environment:
+      DOMAINS: 'minio.domain.com -> http://minio:9000'
+      # STAGE: 'production' # Don't use production until staging works
+      # FORCE_RENEW: 'true'
+      CLIENT_MAX_BODY_SIZE: 20M
+  
+  minio:
+    image: minio/minio
+    volumes:
+      - /mnt/HC_Volume_XXXXXXX/minio:/data
+    environment:
+      MINIO_ACCESS_KEY: 'AKIAIOSFODNN7EXAMPLE'
+      MINIO_SECRET_KEY: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
